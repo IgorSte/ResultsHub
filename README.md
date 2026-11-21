@@ -68,7 +68,6 @@ systemctl start docker
 systemctl enable docker
 
 apt install docker-compose
-apt install postgresql-client
 ```
 
 ### 2. Clone the repositories
@@ -76,19 +75,20 @@ apt install postgresql-client
 ```bash
 cd /opt/
 git clone git@github.com:IgorSte/docker-compose_nginx-php-postgres.git
-git clone git@github.com:IgorSte/ResultsHub_private.git
+git clone git@github.com:IgorSte/ResultsHub.git
 ```
 
 ### 3. Start the stack
 
 ```bash
-cd /opt/docker-compose_nginx-php-postgres/ && APP_PUBLIC_PATH=/opt/ResultsHub_private docker-compose up -d
+cd /opt/docker-compose_nginx-php-postgres/ && APP_PUBLIC_PATH=/opt/ResultsHub docker-compose up -d
 ```
 
 ### 4. Initialize the databases
 
 ```bash
-cd /opt/ResultsHub_private
+apt install postgresql-client
+cd /opt/ResultsHub
 
 PGPASSWORD='dbpwd' psql -h localhost -U dbuser -d postgres -c "DROP DATABASE boards;"
 PGPASSWORD='dbpwd' psql -h localhost -U dbuser -d postgres -c "CREATE DATABASE boards;"
@@ -113,7 +113,7 @@ The background services live in `background/` and use
 ### Setup
 
 ```bash
-cd /opt/ResultsHub_private/background
+cd /opt/ResultsHub/background
 poetry install
 ```
 
@@ -139,7 +139,7 @@ Both services perform one iteration per launch, so schedule them with cron
 To run manually:
 
 ```bash
-cd /opt/ResultsHub_private/background
+cd /opt/ResultsHub/background
 poetry run python3 scout.py --credentials credentials.json
 poetry run python3 executor.py --credentials credentials.json
 ```
@@ -149,8 +149,8 @@ poetry run python3 executor.py --credentials credentials.json
 Add the following entries with `crontab -e` to run both services every minute:
 
 ```cron
-* * * * * cd /opt/ResultsHub_private/background && /usr/local/bin/poetry run python3 scout.py --credentials credentials.json >> /opt/ResultsHub_private/log/cron.log 2>&1
-* * * * * cd /opt/ResultsHub_private/background && /usr/local/bin/poetry run python3 executor.py --credentials credentials.json >> /opt/ResultsHub_private/log/cron.log 2>&1
+* * * * * cd /opt/ResultsHub/background && /usr/local/bin/poetry run python3 scout.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
+* * * * * cd /opt/ResultsHub/background && /usr/local/bin/poetry run python3 executor.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
 ```
 
 > **Note:** cron runs with a minimal environment, so use the full path to the
