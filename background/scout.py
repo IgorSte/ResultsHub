@@ -31,13 +31,11 @@ args = parser.parse_args()
 with open(args.credentials, "r", encoding="utf-8") as creds_f:
     credentials = json.load(creds_f)
 
-
-# runs = db.get_all('SELECT * FROM runs WHERE parser_id > 0 AND scout_base_url IS NOT null', ())
-runs = db.get_all('SELECT r.*, p.script_path, p.credentials_name FROM runs as r LEFT JOIN parsers as p ON r.parser_id = p.id WHERE r.parser_id > 0 AND r.scout_base_url IS NOT null', ())
+runs = db.get_all('SELECT r.*, p.class_name, p.credentials_name FROM runs as r LEFT JOIN parsers as p ON r.scout_parser_id = p.id WHERE r.scout_parser_id > 0 AND r.scout_base_url IS NOT null', ())
 for run in runs:
     # print(run)
 
-    if run["type"] == 0 and run["parser"] > 0:
+    if run["mode"] == 0 and run["scout_parser_id"] > 0:
         scout_log.debug(f'Processing run {run["name"]}, URL: {run["scout_base_url"]}, last_build_checked: {run["scout_last_build_checked"]}')
 
         if run["scout_base_url"]:
@@ -85,8 +83,8 @@ for run in runs:
 
             db.update(f"""UPDATE runs SET
                     "scout_last_build_checked" = {last_build_checked},
-                    "in_progress" = {in_progress},
-                    "in_progress_url" = '{in_progress_url}'
+                    "scout_run_in_progress" = {in_progress},
+                    "scout_run_in_progress_url" = '{in_progress_url}'
                 WHERE "id" = {run["id"]}""", ())
             scout_log.info('Results processed fine')
     else:

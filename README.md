@@ -113,6 +113,13 @@ The background services live in `background/` and use
 ### Setup
 
 ```bash
+curl -sSL https://install.python-poetry.org | python3 -
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.14 python3.14-venv
+
 cd /opt/ResultsHub/background
 poetry install
 ```
@@ -149,8 +156,8 @@ poetry run python3 executor.py --credentials credentials.json
 Add the following entries with `crontab -e` to run both services every minute:
 
 ```cron
-* * * * * cd /opt/ResultsHub/background && /usr/local/bin/poetry run python3 scout.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
-* * * * * cd /opt/ResultsHub/background && /usr/local/bin/poetry run python3 executor.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
+* * * * * cd /opt/ResultsHub/background && ~/.local/bin/poetry run python3 scout.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
+* * * * * cd /opt/ResultsHub/background && ~/.local/bin/poetry run python3 executor.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
 ```
 
 > **Note:** cron runs with a minimal environment, so use the full path to the

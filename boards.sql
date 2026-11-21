@@ -70,6 +70,8 @@ CREATE table "runs" (
     "scout_base_url" text default null,
     "scout_set_filter" varchar(255) default null,
     "scout_last_build_checked" int default 0, -- autopopulated
+    "scout_run_in_progress" boolean default false, -- autopopulated
+    "scout_run_in_progress_url" text default null, -- autopopulated
 
     -- executor mode
     "executor_set_id" int default null,
