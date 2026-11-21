@@ -1,0 +1,841 @@
+* {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: #ededed !important;
+    width: 98%;
+}
+
+/* Навбар */
+.navbar-modern {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    padding: 0.75rem 1.5rem;
+    margin: 1rem 1.5rem;
+    box-sizing: border-box; /* чтобы padding не увеличивал ширину */
+}
+
+/* Логотип */
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+}
+
+.logo-text {
+    font-weight: 700;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, #1e2b4f, #2d3b5e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+}
+
+.menu-section-active {
+  /* color: #0d6efd !important; */
+  border-color: #0d6efd !important;
+}
+
+/* Современный дропдаун */
+.dropdown-modern .dropdown-toggle {
+    background: #f8fafc;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    border-radius: 100px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+}
+
+.dropdown-modern .dropdown-toggle:hover {
+    background: #f1f5f9;
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-modern .dropdown-toggle::after {
+    margin-left: auto;
+    color: #94a3b8;
+}
+
+.dropdown-modern .dropdown-menu {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    padding: 0.5rem;
+    min-width: 280px;
+    margin-top: 8px !important;
+    background: white;
+}
+
+.dropdown-modern .dropdown-item {
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.15s ease;
+}
+
+.dropdown-modern .dropdown-item i {
+    color: #64748b;
+    font-size: 1.2rem;
+    width: 20px;
+}
+
+.dropdown-modern .dropdown-item:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.dropdown-modern .dropdown-item:hover i {
+    color: #3b82f6;
+}
+
+.dropdown-modern .dropdown-item.active {
+    background: linear-gradient(135deg, #f0f4ff, #f8faff);
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.dropdown-modern .dropdown-item.active i {
+    color: #2563eb;
+}
+
+.dropdown-modern .badge {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 100px;
+    margin-left: auto;
+}
+
+.dropdown-modern .dropdown-divider {
+    margin: 0.5rem 0;
+    opacity: 0.1;
+}
+
+/* Вложенное меню */
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dropdown-submenu > .dropdown-item::after {
+    content: "›";
+    font-size: 1.2rem;
+    color: #94a3b8;
+    margin-left: 8px;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 95%;
+    margin-top: -0.5rem;
+    margin-left: 4px;
+    display: none;
+    position: absolute;
+    min-width: 240px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+
+/* Кнопка редактирования */
+.edit-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.6rem 1.2rem;
+    background: white;
+    border-radius: 100px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    margin-left: auto;
+}
+
+.edit-button:hover {
+    background: #f0f4ff;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+}
+
+/* Текущий дашборд (индикация) */
+.current-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 2rem;
+    padding-left: 2rem;
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.current-label {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.current-value {
+    font-weight: 600;
+    color: #0f172a;
+    background: #f1f5f9;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.95rem;
+}
+
+.current-value i {
+    color: #3b82f6;
+    margin-right: 6px;
+}
+
+/* Основной контент */
+.main-content {
+    margin: 1.5rem;
+}
+
+
+/* Современные карточки */
+.modern-card {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+}
+
+.modern-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+/* Заголовки карточек с градиентом */
+.card-header-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    padding: 0.5rem 2rem;
+    border-radius: 20px 20px 0 0 !important;
+}
+
+/* Таблицы как в современном дизайне (без границ) */
+.table-modern {
+    --bs-table-bg: transparent;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    margin-top: -8px;
+}
+
+.table-modern th:nth-child(7) { width: 120px; }  /* Actions */
+.table-modern td:nth-child(7) { padding: 0px 0px !important; }  /* Actions */
+
+.table-modern thead th {
+    background: transparent;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: none;
+    padding: 0.75rem 1rem;
+}
+
+.table-modern tbody tr {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease;
+}
+
+.table-modern tbody tr:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.table-modern td {
+    padding: 1rem;
+    border: none;
+    vertical-align: middle;
+}
+
+.table-modern td:first-child {
+    border-radius: 16px 0 0 16px;
+    padding-left: 1.5rem;
+}
+
+.table-modern td:last-child {
+    border-radius: 0 16px 16px 0;
+    padding-right: 1.5rem;
+}
+
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.15rem 0.35rem;
+    margin: 0.2rem 0.15rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.tag-badge.smoke {
+    color: #e8efff;
+    background-color: #2563eb;
+}
+
+.tag-badge.p1 {
+    color: #2563eb;
+    background-color: #e8efff;
+}
+
+.data-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+
+/* Pass rate бейджи */
+.passrate-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    /* background: #f1f5f9;
+    color: #1e293b; */
+}
+
+/* .passrate-badge.high {
+    background: #dff9e6;
+    color: #0b5e42;
+}
+
+.passrate-badge.medium {
+    background: #fff3d8;
+    color: #b45b0f;
+}
+
+.passrate-badge.low {
+    background: #fee9e7;
+    color: #b42318;
+} */
+
+/* Статус тегов */
+.test-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: #f1f5f9;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: #334155;
+    gap: 6px;
+}
+
+.test-tag i {
+    font-size: 0.9rem;
+}
+
+/* Микро-анимации */
+.hover-lift {
+    transition: transform 0.15s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+
+/* Градиентный текст для заголовков */
+.gradient-text {
+    background: linear-gradient(135deg, #1e2b4f 0%, #2d3b5e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Информационные карточки */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.info-item {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+/* Аватарки проектов */
+.project-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+
+
+.skeleton-table-loader {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    max-width: 100%;
+}
+
+.skeleton-header-row {
+    display: grid;
+    grid-template-columns: 200px repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.skeleton-row {
+    display: grid;
+    grid-template-columns: 200px repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.skeleton-cell {
+    background: linear-gradient(90deg, 
+        #f0f0f0 0%, 
+        #f8f8f8 25%, 
+        #f0f0f0 50%, 
+        #e8e8e8 75%, 
+        #f0f0f0 100%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.8s infinite ease-in-out;
+    border-radius: 8px;
+    height: 24px;
+}
+
+.skeleton-label {
+    background: linear-gradient(90deg, 
+        #e0e0e0 0%, 
+        #f0f0f0 25%, 
+        #e0e0e0 50%, 
+        #d0d0d0 75%, 
+        #e0e0e0 100%);
+    background-size: 200% 100%;
+    width: 100%;
+    height: 28px;
+}
+
+.skeleton-value {
+    height: 24px;
+    width: 75%;
+}
+
+/* Разная ширина для значений, чтобы было естественнее
+.skeleton-row .skeleton-value:nth-child(2) { width: 80%; }
+.skeleton-row .skeleton-value:nth-child(3) { width: 70%; }
+.skeleton-row .skeleton-value:nth-child(4) { width: 90%; }
+.skeleton-row .skeleton-value:nth-child(5) { width: 60%; }
+.skeleton-row .skeleton-value:nth-child(6) { width: 75%; } */
+
+/* Для шапки значения одинаковой ширины */
+.skeleton-header-row .skeleton-value {
+    width: 100%;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+
+
+.rundetails-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.02), 0 0 0 1px rgba(0,0,0,0.02);
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+}
+
+.rundetails-title {
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.rundetails-row {
+    grid-template-columns: 220px repeat(5, 1fr);
+    border-bottom: 1px solid rgba(0,0,0,0.02);
+    transition: background 0.15s ease;
+}
+
+.rundetails-row:hover {
+    background: #f8fafc;
+}
+
+.rundetails-cell {
+    padding: 16px 12px;
+    align-items: center;
+}
+
+.rundetails-test-name-header {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.rundetails-run-link {
+    justify-content: center;
+}
+
+.rundetails-run-link-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 12px;
+    transition: all 0.15s ease;
+}
+
+.rundetails-run-link-btn:hover {
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    transform: translateY(-1px);
+}
+
+.rundetails-run-id {
+    font-weight: 600;
+    color: #2563eb;
+    font-size: 0.95rem;
+}
+
+.rundetails-run-date {
+    font-size: 0.75rem;
+    color: #64748b;
+    align-items: center;
+}
+
+.rundetails-run-duration {
+    font-size: 0.75rem;
+    color: #64748b;
+    align-items: center;
+}
+
+/* Ячейка с тестом */
+.rundetails-test-name {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.rundetails-test-info {
+    /* display: flex; */
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rundetails-test-title {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 0.95rem;
+}
+
+/* Результаты */
+.rundetails-result {
+    justify-content: center;
+    position: relative;
+}
+
+.rundetails-result-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    border-radius: 12px;
+    min-width: 60px;
+}
+
+.rundetails-result.rundetails-pass .rundetails-result-content {
+    background: #f0fdf4;
+    color: #10b981;
+}
+
+.rundetails-result.rundetails-fail .rundetails-result-content {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.rundetails-result.rundetails-skip .rundetails-result-content {
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.rundetails-result.rundetails-flaky .rundetails-result-content {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+.rundetails-result i {
+    font-size: 1.2rem;
+}
+
+.rundetails-result.rundetails-fail:hover .rundetails-error-tooltip {
+    opacity: 1;
+}
+
+/* Футер */
+.rundetails-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid rgba(0,0,0,0.03);
+    font-size: 0.9rem;
+}
+
+.rundetails-summary {
+    display: flex;
+    gap: 20px;
+}
+
+.rundetails-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #334155;
+}
+
+.rundetails-scroll-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    -webkit-overflow-scrolling: touch; /* плавный скролл на iOS */
+    scrollbar-width: thin; /* тонкий скроллбар для Firefox */
+    margin-bottom: 4px; /* небольшой отступ для скроллбара */
+}
+
+/* Стилизация скроллбара для WebKit (Chrome, Safari, Edge) */
+.rundetails-scroll-container::-webkit-scrollbar {
+    height: 8px;
+    background-color: #f1f5f9;
+    border-radius: 20px;
+}
+
+.rundetails-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #94a3b8;
+    border-radius: 20px;
+    border: 2px solid #f1f5f9;
+}
+
+.rundetails-scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
+}
+
+/* Делаем первую колонку липкой */
+.rundetails-row .rundetails-cell:first-child {
+    position: sticky;
+    left: 0;
+    background: white; /* наследует фон от строки */
+    z-index: 5;
+    align-self: stretch;
+    min-width: 200px;
+}
+
+/* Для строки заголовка - первая ячейка */
+.rundetails-cell:first-child {
+    background: #f8fafc; /* цвет фона заголовка */
+    z-index: 10; /* выше остальных ячеек */
+    min-width: 200px;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.run-chart-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.02), 0 0 0 1px rgba(0,0,0,0.02);
+    padding: 20px;
+    /* margin: 20px 0; */
+    font-family: 'Inter', sans-serif;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.chart-title {
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 24px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.legend-line {
+    width: 24px;
+    height: 3px;
+    border-radius: 3px;
+}
+
+.legend-line.pass-rate {
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.legend-line.test-count {
+    background: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin: 20px 0 10px;
+}
+
+.chart-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.03);
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.footer-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+
+.color-picker-block {
+    margin: 10px;
+}
+
+.color-picker {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    padding: 3px;
+    margin: 3px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.table-wrapper .section-grip {
+    cursor: grab;
+}
+
+.table-wrapper .section-grip:active {
+    cursor: grabbing;
+}
+
+.sortable-ghost {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+}
+
+.sortable-rows .run-grip {
+    cursor: grab;
+}
+
+.sortable-rows .run-grip:active {
+    cursor: grabbing;
+}
+
+.run-grip {
+    width: 0px;
+    margin: 0px;
+    padding-left: 15px  !important;
+    padding-right: 0px  !important;
+}
+
+.toastr-header {
+    font-size: 1.25rem;
+}
+
+.toastr-message {
+    font-size: 1rem;
+}

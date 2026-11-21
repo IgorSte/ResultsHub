@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "ResultsHub"
+version = "0.1.0"
+description = "ResultsHub - See your automation health at one page."
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.14"
+psycopg2-binary = ">=2.9.11"
+requests = "*"
+paramiko = "*"
+packaging = "*"
+pytest = "^8.0.0"
+allure-pytest = "^2.16.0"
