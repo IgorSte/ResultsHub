@@ -65,7 +65,7 @@ for run in runs:
                         last_build_checked = data['build_id']
 
                     if len(data["tests"]) > 0:
-                        existent_results = db_results.get_all(f"SELECT id FROM results WHERE full_url = '{run["id"]}'", ())
+                        existent_results = db_results.get_all(f"SELECT id FROM results WHERE full_url = '{data["full_url"]}'", ())
                         if not existent_results:
                             result_id = db_results.insert_results(data)
 
@@ -73,7 +73,7 @@ for run in runs:
                                 db_results.insert_tests(result_id, test)
                             scout_log.debug(f'Result {result_id} added to the DB with {len(data["tests"])} tests')
                         else:
-                            result_id = existent_results[0]
+                            result_id = existent_results[0]['id']
                             scout_log.debug(f'Result {result_id} is already added in the DB')
 
                         db_results.insert(f"""INSERT into "associations" ("result_id", "run_id") values ({result_id}, {run["id"]});""", ())
