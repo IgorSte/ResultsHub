@@ -156,7 +156,7 @@ poetry run python3 executor.py --credentials credentials.json
 Add the following entries with `crontab -e` to run both services every minute:
 
 ```cron
-* * * * * cd /opt/ResultsHub/background && ~/.local/bin/poetry run python3 scout.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
+*/5 * * * * cd /opt/ResultsHub/background && ~/.local/bin/poetry run python3 scout.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
 * * * * * cd /opt/ResultsHub/background && ~/.local/bin/poetry run python3 executor.py --credentials credentials.json >> /opt/ResultsHub/log/cron.log 2>&1
 ```
 

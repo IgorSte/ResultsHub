@@ -29,9 +29,14 @@
     if (isset($_GET['board_id'])) {
         $current_board_id = $_GET['board_id'];
         $board = $db->get_one('SELECT project_id from boards where id = $1', [$current_board_id]);
-        $current_project_id = $board['project_id'];
-
-        $boards_button_class = 'menu-section-active';
+        if ($board) {
+            $current_project_id = $board['project_id'];
+            $boards_button_class = 'menu-section-active';
+        }
+        else {
+            echo 'Board ID is wrong';
+            exit;
+        }
     }
     if (isset($_GET['machines'])) $machines_button_class = 'menu-section-active';
     if (isset($_GET['sets'])) $sets_button_class = 'menu-section-active';
@@ -142,7 +147,7 @@
     </div>
     
     <!-- AUTH -->
-    <a href="#" class="edit-button">
+    <a href="#" class="edit-button" onclick="alert('Not implemented yet')">
         <i class="bi bi-person"></i>
         Login
     </a>

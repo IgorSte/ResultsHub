@@ -25,6 +25,9 @@ class AllureLocal:
             check=False
         )
 
+        if not os.path.exists(f'{self.working_dir}/{self.json_to_process}'):
+            return None
+        
         with open(f'{self.working_dir}/{self.json_to_process}', "r", encoding="utf-8") as allure_f:
             allure_data = json.load(allure_f)
 

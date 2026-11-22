@@ -33,6 +33,7 @@
                     <div class="container-fluid px-4">
 
                         <?php
+                            $board_id = 0;
                             if (isset($_GET['board_id'])) require_once('board.php');
                             elseif (isset($_GET['machines'])) require_once('machines.php');
                             elseif (isset($_GET['sets'])) require_once('sets.php');
@@ -54,5 +55,11 @@
         <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
             <div id="toastContainer"></div>
         </div>
+
+        <?php if ($board_id > 0) { ?>
+            <script>
+                setInterval(function () { board_get_data_update(<?= $board_id ?>); }, <?= $conf_board_update_interval ?>000)
+            </script>
+        <?php } ?>
     </body>
 </html>

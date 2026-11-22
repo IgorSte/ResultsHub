@@ -36,7 +36,7 @@ INSERT into "sections" ("board_id", "name", "comment", "color", "sort_order") va
 
 CREATE table "executors" (
     "id" serial primary key,
-    "state" int default null, -- 1 - queued, 2 - starting, 3 - running, 4 - processing, 5 - done
+    "state" int default null, -- 1 - queued, 10 - starting, 20 - running, 30 - processing, 90 - stopping, 99 - stopped, 100 - done
     "run_id" int,
     "set_id" int,
     "machine_id" int,
@@ -49,6 +49,8 @@ CREATE table "executors" (
     "pid" int,
     "working_dir" text default null,
     "log_file_path" text default null,
+    "execution_log" text default null,
+    "result_id" int default 0,
     "approximate_duration" int default null,
     "start_time" timestamptz default current_timestamp,
     "finish_time" timestamptz
@@ -75,19 +77,22 @@ CREATE table "runs" (
 
     -- executor mode
     "executor_set_id" int default null,
+    "executor_machine_id" int default 0,
     "executor_id" int default null, -- autopopulated
 
     -- manual mode
     "manual_parser_id" int default 2, -- parser to be used
 
     "sort_order" int default 0,
+    "update_time" timestamptz default current_timestamp,
+
     foreign key (section_id) references sections(id) on delete restrict on update cascade,
     foreign key (executor_id) references executors(id) on delete set null on update cascade
 );
-INSERT into "runs" ("section_id", "name", "tags", "comment") values
-    (1, 'Demo Run', 'tag one,two', 'some comment'),
-    (1, 'Demo Smoke', 'tag one,two', 'some comment'),
-    (2, 'Demo Two', 'tag one,two', 'some comment');
+INSERT into "runs" ("section_id", "name", "tags", "comment", "sort_order") values
+    (1, 'Demo Run', 'tag one,two', 'some comment', 1),
+    (1, 'Demo Smoke', 'tag one,two', 'some comment', 2),
+    (2, 'Demo Two', 'tag one,two', 'some comment', 3);
 
 
 CREATE table "parsers" (

@@ -30,7 +30,7 @@
             data-board-name="<?= $board['name'] ?>"
             data-board-icon="<?= $board['icon'] ?>"
             data-board-is_archived="<?= $board['is_archived'] ?>"
-            data-board-comment="<?= $board['comment'] ?>"
+            data-board-comment="<?= escape_string($board['comment']) ?>"
             data-board-project_id="<?= $board['project_id'] ?>">
             <i class="bi bi-pencil me-2"></i>Board
         </button>
@@ -46,8 +46,8 @@
     </div>
     <div class="p-4">
         <div class="row">
-            <div class="col-md-8">
-                <?= $board['comment'] ?>
+            <div class="p-3">
+                <?= parse_comment($board['comment']) ?>
             </div>
         </div>
     </div>

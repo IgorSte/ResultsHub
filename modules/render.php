@@ -31,14 +31,25 @@
         $executor = $db->get_one("SELECT e.*, m.name as machine_name, s.name as set_name, r.name as run_name
             from executors as e, machines as m, sets as s, runs as r where e.id = $executor_id and m.id = e.machine_id and s.id = e.set_id and r.id = e.run_id");
 
-        $states_verbose = ['unknown', 'queued', 'starting', 'running', 'processing', 'done'];
+        # -- 1 - queued, 10 - starting, 20 - running, 30 - processing, 90 - stopping, 99 - stopped, 100 - done
+        $states_verbose = [
+            0 => 'unknown', 
+            1 => 'queued',
+            10 => 'starting',
+            20 => 'running',
+            30 => 'processing',
+            90 => 'stopping',
+            99 => 'stopped',
+            100 => 'done'];
         $states_color = [
-            '',
-            'background-color: #a9cafb',
-            'background-color: #a9fbbb',
-            'background-color: #198754; color: white;',
-            'background-color: #a9fbbb',
-            ''];
+            0 => '',
+            1 => 'background-color: #a9cafb',
+            10 => 'background-color: #a9fbbb',
+            20 => 'background-color: #198754; color: white;',
+            30 => 'background-color: #a9fbbb',
+            90 => 'background-color: #fba9a9',
+            99 => '',
+            100 => ''];
         $state_verbose = $states_verbose[$executor['state']];
         $state_color = $states_color[$executor['state']];
 
@@ -81,7 +92,7 @@
             $duration = $results[0]['duration_sec'];
             $duration_text = verbose_duration($duration);
 
-            $age_text = verbose_duration(time() - strtotime($results[0]['time']));
+            $age_text = verbose_duration(time() - (strtotime($results[0]['start_time']) + $results[0]['duration_sec']));
             
             $total_diff = '';
             $passrate_diff = '';
@@ -133,7 +144,7 @@
 
         if ($run['mode'] == 0)
             $action_button = '
-                <button class="btn btn-outline-primary btn-sm rounded-circle p-1" style="width: 36px; height: 36px;">
+                <button onclick="run_refresh('.$run['id'].')" class="btn btn-outline-primary btn-sm rounded-circle p-1" style="width: 36px; height: 36px;">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>';
         elseif ($run['mode'] == 1) {
@@ -141,11 +152,9 @@
             // when the run is in progress
             if ($run['executor_id']) {
                 $action_button = '
-                    <button class="btn btn-outline-danger btn-sm rounded-circle p-1" style="width: 36px; height: 36px;"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#runStopModal"
-                        data-run-id="'.$run['id'].'"
-                        data-run-name="'.$run['name'].'">
+                    <button 
+                        onclick="run_stop('.$run['id'].')" 
+                        class="btn btn-outline-danger btn-sm rounded-circle p-1" style="width: 36px; height: 36px;">
                         <i class="bi bi-stop"></i>
                     </button>';
 
@@ -171,6 +180,14 @@
                 <button class="btn btn-light btn-sm rounded-circle p-1" style="width: 36px; height: 36px;">
                     <i class="bi bi-three-dots-vertical"></i>
                 </button>';
+
+        $run_name = escape_string($run['name']);
+        $run_tags = escape_string($run['tags']);
+        $run_test_filter = escape_string($run['test_filter']);
+        $run_scout_base_url = escape_string($run['scout_base_url']);
+        $run_scout_set_filter = escape_string($run['scout_set_filter']);
+        $run_comment = escape_string($run['comment']);
+        $run_comment_html = parse_comment($run['comment']);
 
         $html = <<<HTML
                     <tr id="run_tr_{$run['id']}" class="run_tr" data-run-id="{$run['id']}">
@@ -199,7 +216,7 @@
                             <span class="data-badge">$age_text</span>
                         </td>
                         <td>
-                            <span class="small text-muted">{$run['comment']}</span>
+                            <span class="small text-muted">{$run_comment_html}</span>
                         </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-light btn-sm rounded-circle p-1" style="width: 36px; height: 36px;"
@@ -223,14 +240,14 @@
                                 data-bs-target="#runEditModal"
                                 data-run-id="{$run['id']}"
                                 data-run-section-id="{$run['section_id']}"
-                                data-run-name="{$run['name']}"
-                                data-run-tags="{$run['tags']}"
-                                data-run-comment="{$run['comment']}"
-                                data-run-test-filter="{$run['test_filter']}"
+                                data-run-name="{$run_name}"
+                                data-run-tags="{$run_tags}"
+                                data-run-comment="{$run_comment}"
+                                data-run-test-filter="{$run_test_filter}"
                                 data-run-mode="{$run['mode']}"
                                 data-scout-parser-id="{$run['scout_parser_id']}"
-                                data-scout-base-url="{$run['scout_base_url']}"
-                                data-scout-set-filter="{$run['scout_set_filter']}"
+                                data-scout-base-url="{$run_scout_base_url}"
+                                data-scout-set-filter="{$run_scout_set_filter}"
                                 data-executor-set-id="{$run['executor_set_id']}"
                                 data-manual-parser-id="{$run['manual_parser_id']}">
                                 <i class="bi bi-pencil"></i>
@@ -249,6 +266,10 @@
     {
         global $db;
         $section_style = 'style="background: linear-gradient(135deg, #ffffff 0%, '.$section['color'].' 100%);"';
+        $section_name = escape_string($section['name']);
+        $section_color = escape_string($section['color']);
+        $section_comment = escape_string($section['comment']);
+        $section_comment_html = parse_comment($section['comment']);
 
         $html = <<<HTML
             <div id="section_div_{$section['id']}" class="section_div table-wrapper modern-card mb-4" data-section-id="{$section['id']}">
@@ -281,17 +302,17 @@
                             data-bs-toggle="modal" 
                             data-bs-target="#sectionEditModal"
                             data-section-id="{$section['id']}"
-                            data-section-name="{$section['name']}"
-                            data-section-color="{$section['color']}"
+                            data-section-name="{$section_name}"
+                            data-section-color="{$section_color}"
                             data-section-is_archived="{$section['is_archived']}"
-                            data-section-comment="{$section['comment']}"
+                            data-section-comment="{$section_comment}"
                             data-section-board-id="{$section['board_id']}">
                             <i class="bi bi-pencil"></i>
                         </button>
                     </div>
                 </div>
-                <div class="p-3">
-                    <span>{$section['comment']}</span>
+                <div class="px-4 pt-3 pb-1">
+                    <span>{$section_comment_html}</span>
                 </div>
 
                 <div class="p-3">
@@ -304,8 +325,8 @@
                                 <th class="text-center">Count</th>
                                 <th class="text-center">Duration</th>
                                 <th class="text-center">Age</th>
-                                <th>Comments</th>
-                                <th></th>
+                                <th class="text-center comments-column">Comments</th>
+                                <th class="buttons-column"></th>
                             </tr>
                         </thead>
                         <tbody class="sortable-rows">
@@ -359,11 +380,13 @@
 
     function render_run_details($run_id)
     {
+        global $db;
         global $db_results;
 
         $max_details_count = 25;
         $html_data = '';
 
+        $run = $db->get_one("SELECT * from runs where id = $1", [$run_id]);
         $results = get_n_latest_results($run_id, $max_details_count);
 
         if ($results)
@@ -387,16 +410,22 @@
 
                 foreach ($tests as $test)
                 {
-                    if (!isset($details_data[$test['name']]))
+                    if (!$run['test_filter'] ||
+                        (
+                            preg_match('!'.$run['test_filter'].'!', $test['name']) || 
+                            preg_match('!'.$run['test_filter'].'!', $test['script_path']))
+                        )
                     {
-                        $details_data[$test['name']] = array();
-                        $details_data[$test['name']]['results'] = array();
-                        $details_data[$test['name']]['tags'] = render_tags($test['tags']);
-                        $details_data[$test['name']]['priority'] = render_priority($test['priority']);
-                        $details_data[$test['name']]['full_url'] = $test['full_url'];
+                        if (!isset($details_data[$test['name']]))
+                        {
+                            $details_data[$test['name']] = array();
+                            $details_data[$test['name']]['results'] = array();
+                            $details_data[$test['name']]['tags'] = render_tags($test['tags']);
+                            $details_data[$test['name']]['priority'] = render_priority($test['priority']);
+                            $details_data[$test['name']]['full_url'] = $test['full_url'];
+                        }
+                        $details_data[$test['name']]['results'][$result['id']] = $test['state'];
                     }
-
-                    $details_data[$test['name']]['results'][$result['id']] = $test['state'];
                 }
             }
 
@@ -637,6 +666,12 @@
             $inprogress_block = render_inprogress_block($machine['executor_id']);
         }
 
+        $machine_name = escape_string($machine['name']);
+        $machine_hc_ip_port = escape_string($machine['hc_ip_port']);
+        $machine_json = escape_string($machine['json']);
+        $machine_comment = escape_string($machine['comment']);
+        $machine_comment_html = parse_comment($machine['comment']);
+
         $html = <<<HTML
             <tr id="machine_tr_{$machine['id']}" class="run_tr" data-run-id="{$machine['id']}">
                 <td>
@@ -652,18 +687,18 @@
                     <div class="small text-muted">{$machine['executor_id']}</div>
                 </td>
                 <td>
-                    <span class="small text-muted">{$machine['comment']}</span>
+                    <span class="small text-muted">{$machine_comment_html}</span>
                 </td>
                 <td class="text-end">
                     <button type="button" class="btn btn-light btn-sm rounded-circle p-1" style="width: 36px; height: 36px;"
                         data-bs-toggle="modal" 
                         data-bs-target="#machineEditModal"
                         data-machine-id="{$machine['id']}"
-                        data-machine-name="{$machine['name']}"
+                        data-machine-name="{$machine_name}"
                         data-machine-board-id="{$machine['board_id']}"
-                        data-machine-hc="{$machine['hc_ip_port']}"
-                        data-machine-json="{$machine['json']}"
-                        data-machine-comment="{$machine['comment']}">
+                        data-machine-hc="{$machine_hc_ip_port}"
+                        data-machine-json="{$machine_json}"
+                        data-machine-comment="{$machine_comment}">
                         <i class="bi bi-pencil"></i>
                     </button>
                 </td>
@@ -751,6 +786,14 @@
 
     function render_set($set)
     {
+        $set_name = escape_string($set['name']);
+        $set_json = escape_string($set['json']);
+        $set_git_url = escape_string($set['git_url']);
+        $set_commandline = escape_string($set['commandline']);
+        $set_local_artifacts = escape_string($set['local_artifacts']);
+        $set_comment = escape_string($set['comment']);
+        $set_comment_html = parse_comment($set['comment']);
+
         $html = <<<HTML
             <tr id="set_tr_{$set['id']}" class="run_tr" data-run-id="{$set['id']}">
                 <td>
@@ -770,20 +813,20 @@
                     <div class="small text-muted">{$set['parser_name']}</div>
                 </td>
                 <td>
-                    <span class="small text-muted">{$set['comment']}</span>
+                    <span class="small text-muted">{$set_comment_html}</span>
                 </td>
                 <td class="text-end">
                     <button type="button" class="btn btn-light btn-sm rounded-circle p-1" style="width: 36px; height: 36px;"
                         data-bs-toggle="modal" 
                         data-bs-target="#setEditModal"
                         data-set-id="{$set['id']}"
-                        data-set-name="{$set['name']}"
+                        data-set-name="{$set_name}"
                         data-set-parser-id="{$set['parser_id']}"
-                        data-set-json="{$set['json']}"
-                        data-set-git="{$set['git_url']}"
-                        data-set-local-artifacts="{$set['local_artifacts']}"
-                        data-set-commandline="{$set['commandline']}"
-                        data-set-comment="{$set['comment']}">
+                        data-set-json="{$set_json}"
+                        data-set-git="{$set_git_url}"
+                        data-set-local-artifacts="{$set_local_artifacts}"
+                        data-set-commandline="{$set_commandline}"
+                        data-set-comment="{$set_comment}">
                         <i class="bi bi-pencil"></i>
                     </button>
                 </td>
@@ -923,7 +966,7 @@
                 <label for="record-name" class="form-label"><i class="bi bi-tag me-2"></i>
                     Commandline
                 </label>
-                <textarea class="form-control rundetails-textarea" id="run-start-set-commandline" rows="2"
+                <textarea class="form-control rundetails-textarea" id="run-start-set-commandline" rows="3"
                     disabled>{$set_data['commandline']}</textarea>
             </div>
 

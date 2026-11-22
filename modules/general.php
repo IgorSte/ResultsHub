@@ -170,13 +170,38 @@
     }
 
 
+    function escape_string($string)
+    {
+        if ($string) return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+        else return $string;
+    }
+
+
+    function parse_comment($string)
+    {
+        $jenkins_id_pattern = "/([A-Z]{2,6}-\d{3,6})/";
+
+        $string = preg_replace(
+            $jenkins_id_pattern,
+            '<a style="text-decoration: none" target="_blank" href="https://tracker.yandex.ru/$1">$1</a>',
+            $string);
+
+        return $string;
+    }
+
+
     function get_n_latest_results($run_id, $number)
     {
         global $db;
         global $db_results;
 
         $run = $db->get_one("SELECT * from runs where id = $1", [$run_id]);
-        $results = $db_results->get_all("SELECT a.result_id, r.* from associations as a join results as r on r.id = a.result_id where run_id = $1 order by r.id desc limit $2", [$run_id, $number]);
+        
+        # in case results are filtered, the latest results may be not suitable, need to cehck deeper
+        $select_limit = $number;
+        if ($run['test_filter']) $select_limit = 1000;
+
+        $results = $db_results->get_all("SELECT a.result_id, r.* from associations as a join results as r on r.id = a.result_id where run_id = $1 order by r.id desc limit $2", [$run_id, $select_limit]);
 
         if ($run['test_filter'] && strlen($run['test_filter']) > 0)
         {
@@ -185,7 +210,7 @@
             foreach ($results as $result)
             {
                 $result['tests_total'] = 0;
-                $result['tests_failed'] = 0;
+                $result['tests_passed'] = 0;
                 $result['tests_skipped'] = 0;
                 $result['tests_failed'] = 0;
                 $result['duration_sec'] = 0;
@@ -198,13 +223,16 @@
                     {
                         $result['tests_total']++;
                         if ($test['state'] == 0) $result['tests_failed']++;
-                        elseif ($test['state'] == 1) $result['tests_failed']++;
+                        elseif ($test['state'] == 1) $result['tests_passed']++;
                         elseif ($test['state'] == 2) $result['tests_skipped']++;
                         $result['duration_sec'] += $test['duration_sec'];
                     }
                 }
 
                 if ($result['tests_total']) $filtered_results[] = $result;
+
+                # to ensure that not more than expeted number of results returned
+                if (count($filtered_results) >= $number) break;
             }
 
             $results = $filtered_results;

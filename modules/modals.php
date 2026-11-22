@@ -278,7 +278,7 @@
                             onkeyup="section_edit_color_preview()">
                     <div class='color-picker-block' >
                         <?php
-                            $colors = ['#f8faff', '#afffaa', '#fffcaa', '#ffaaaa', '#aaffff'];
+                            $colors = ['#f8faff', '#c0c0c0', '#afffaa', '#fffcaa', '#ffaaaa', '#aaffff', '#aab8ff'];
 
                             foreach ($colors as $color)
                             {
@@ -403,7 +403,7 @@
                     <textarea class="form-control rundetails-textarea" 
                                 id="set-edit-commandline" 
                                 name="comment"
-                                rows="2"
+                                rows="3"
                                 placeholder="Commandline to start the set..."></textarea>
                 </div>
 
@@ -687,7 +687,7 @@
                                 class="form-control form-control rundetails-input" 
                                 id="run-edit-scout-set-filter"
                                 name="name"
-                                placeholder="Filter for the results.">
+                                placeholder="Regexp to filter results by name.">
                     </div>
                 </div>
 
@@ -709,11 +709,30 @@
                         ?>
                         </select>
                     </div>
+
+                    <!-- Dropdown-list -->
+                    <div class="form-group mb-4">
+                        <label for="record-category" class="form-label">
+                            <i class="bi bi-list-ul me-2"></i>
+                            Machine to Run
+                        </label>
+                        <select class="form-select rundetails-select" id="run-edit-executor-machine" name="category">
+                            <option value="0">First available</option>
+                        <?php
+                            $machines = $db->get_all('SELECT * from "machines" where board_id = '.$board_id.' order by name asc');
+
+                            foreach ($machines as $machine)
+                            {
+                                echo '<option value="'.$machine['id'].'">'.$machine['name'].'</option>';
+                            }
+                        ?>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="run-edit-manual-data" style="display: none">
                     <!-- Dropdown-list -->
-                    <div class="form-group mb-4" id='run-edit-manual-parser'>
+                    <div class="form-group mb-4">
                         <label for="record-category" class="form-label">
                             <i class="bi bi-list-ul me-2"></i>
                             Parser for the results

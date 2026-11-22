@@ -18,11 +18,20 @@
         echo $response;
         exit;
     }
+    elseif ($method == 'GET' && count($request) == 2 && $request[0] == 'board_update') {
+        $response = rest_board_update_get();
+    }
     elseif ($method == 'GET' && count($request) == 2 && $request[0] == 'run_start') {
         $response = rest_run_start_get();
     }
     elseif ($method == 'POST' && count($request) == 2 && $request[0] == 'run_start') {
         $response = rest_run_start_post();
+    }
+        elseif ($method == 'POST' && count($request) == 2 && $request[0] == 'run_stop') {
+        $response = rest_run_stop_post();
+    }
+    elseif ($method == 'POST' && count($request) == 2 && $request[0] == 'run_refresh') {
+        $response = rest_run_refresh_post();
     }
     elseif ($method == 'GET' && count($request) == 2 && $request[0] == 'executor_log') {
         $response = executor_log_get();
@@ -147,6 +156,39 @@
     }
 
 
+    function rest_board_update_get()
+    {
+        global $db;
+        global $request;
+        global $conf_board_update_interval;
+
+        $board_id = $request[1];
+
+        $sections_list = array();
+        $sections = $db->get_all("SELECT * from sections where board_id >= $1", [$board_id]);
+        foreach ($sections as $section) {
+            $sections_list[] = $section['id'];
+        }
+
+        // echo "SELECT * from runs where section_id in (".implode(',', $sections_list).") and update_time >= now() - interval '10 seconds'";
+
+        $interval = round($conf_board_update_interval * 1.25, 0);
+        $runs = $db->get_all("SELECT * from runs where section_id in (".implode(',', $sections_list).") and update_time >= now() - interval '$interval seconds'", []);
+
+        $data_html = '';
+        if (count($runs) > 0) {
+            $data_html = render_board($board_id);
+        }
+        
+        $response = [
+            'success' => true,
+            'data' => $data_html
+        ];
+
+        return $response;
+    }
+
+
     function rest_run_start_get()
     {
         global $request;
@@ -156,7 +198,11 @@
 
         $run_data = $db->get_one("SELECT r.*, s.board_id from runs as r, sections as s where r.id = $1 and r.section_id = s.id", [$id]);
         $set_data = $db->get_one("SELECT s.*, p.name as parser_name from sets as s, parsers as p where s.id = $1 and s.parser_id = p.id", [$run_data['executor_set_id']]);
-        $machine_data = choose_machine_for_executor($run_data['board_id']);
+        
+        if ($run_data['executor_machine_id'])
+            $machine_data = $db->get_one("SELECT * from machines where id = $1", [$run_data['executor_machine_id']]);
+        # selecting automatially if not specified
+        else $machine_data = choose_machine_for_executor($run_data['board_id']);
 
         if ($machine_data) {
             $html = render_run_start_form($run_data, $set_data, $machine_data);
@@ -170,7 +216,7 @@
             $response = [
                 'success' => false,
                 'data' => '',
-                'error' => 'No suitable machine found'
+                'error' => 'Please create a machine for this board first!'
             ];
         }
 
@@ -200,13 +246,76 @@
             [$set_commandline, $set_json, $machine_json]);
         
         if ($new_id > 0) {
-            $result = $db->query("UPDATE runs set executor_id = $new_id where id = $run_id");
+            $result = $db->query("UPDATE runs set executor_id = $new_id, update_time = now() where id = $run_id");
             $run = $db->get_one("SELECT * from runs where id = $1", [$run_id]);
             list($data_html, $stats) = render_run($run);
 
             $response = [
                 'success' => true,
                 'data' => $data_html
+            ];
+        }
+        else {
+            $response = [
+                'success' => false,
+                'data' => ''
+            ];
+        }
+
+        return $response;
+    }
+
+
+    function rest_run_stop_post()
+    {
+        global $request;
+        global $db;
+
+        $run_id = $request[1];
+        $payload = get_payload();
+        
+        $run = $db->get_one("SELECT * from runs where id = $1", [$run_id]);
+        if ($run['executor_id']) {
+            $result = $db->query("UPDATE executors set state = 90 where id = $1", [$run['executor_id']]);
+            list($data_html, $stats) = render_run($run);
+
+            $response = [
+                'success' => true,
+                'data' => $data_html
+            ];
+        }
+        else {
+            $response = [
+                'success' => false,
+                'data' => ''
+            ];
+        }
+
+        return $response;
+    }
+
+
+    function rest_run_refresh_post()
+    {
+        global $request;
+        global $db;
+
+        $num_results_to_refresh = 25;
+
+        $run_id = $request[1];
+        $payload = get_payload();
+
+        $run = $db->get_one("SELECT * from runs where id = $1", [$run_id]);
+        
+        $new_scout_last_build_checked = $run['scout_last_build_checked'] - $num_results_to_refresh;
+        if ($new_scout_last_build_checked < 0) $new_scout_last_build_checked = 0;
+
+        $result = $db->query("UPDATE runs set scout_last_build_checked = $new_scout_last_build_checked where id = $run_id");
+        
+        if ($result) {
+            $response = [
+                'success' => true,
+                'data' => ''
             ];
         }
         else {
@@ -365,11 +474,11 @@
         where id = $id", [$name, $comment]);
 
         if ($result > 0) {
-            $data_html = render_board($id);
+            // $data_html = render_board($id);
 
             $response = [
                 'success' => true,
-                'data' => $data_html
+                'data' => ''
             ];
         }
         else {
@@ -393,13 +502,14 @@
         $comment = $payload['comment'];
         $project_id = $payload['project_id'];
 
-        $result = $db->insert("INSERT into boards (name, comment, project_id) values ($1, $2, $project_id)", 
+        $new_id = $db->insert("INSERT into boards (name, comment, project_id) values ($1, $2, $project_id)", 
             [$name, $comment]);
 
-        if ($result > 0) {
+        if ($new_id > 0) {
             $response = [
                 'success' => true,
-                'data' => ''
+                'data' => '',
+                'new_id' => $new_id
             ];
         }
         else {
@@ -772,6 +882,23 @@
         $payload = get_payload();
         $id = $request[1];
 
+        $validation = $db->get_all("SELECT name from runs where executor_machine_id = $1", [$id]);
+        if (count($validation)) {
+            $used_by = array();
+
+            foreach ($validation as $v) {
+                $used_by[] = $v['name'];
+            }
+
+            $response = [
+                'success' => false,
+                'data' => '',
+                'error' => 'Machine is used by the runs: '.implode(', ', $used_by)
+            ];
+
+            return $response;
+        }
+
         $result = $db->query("DELETE from machines where id = $1", [$id]);
 
         if ($result > 0) {
@@ -808,9 +935,13 @@
         $scout_base_url = $payload['scout_base_url'];
         $scout_set_filter = $payload['scout_set_filter'];
         $executor_set_id = $payload['executor_set_id'];
+        $executor_machine_id = $payload['executor_machine_id'];
         $manual_parser_id = $payload['manual_parser_id'];
 
-        if ($mode != 1) $executor_set_id = 0;
+        if ($mode != 1) {
+            $executor_set_id = 0;
+            $executor_machine_id = 0;
+        }
 
         $result = $db->query("UPDATE runs set
             name = $1,
@@ -823,7 +954,9 @@
             scout_base_url = '$scout_base_url',
             scout_set_filter = $5,
             executor_set_id = $executor_set_id,
-            manual_parser_id = $manual_parser_id
+            executor_machine_id = $executor_machine_id,
+            manual_parser_id = $manual_parser_id,
+            update_time = now()
         where id = $id", [$name, $comment, $tags, $test_filter, $scout_set_filter]);
 
         if ($result > 0) {
@@ -863,17 +996,21 @@
         $scout_base_url = $payload['scout_base_url'];
         $scout_set_filter = $payload['scout_set_filter'];
         $executor_set_id = $payload['executor_set_id'];
+        $executor_machine_id = $payload['executor_machine_id'];
         $manual_parser_id = $payload['manual_parser_id'];
 
-        if ($mode != 1) $executor_set_id = 0;
+        if ($mode != 1) {
+            $executor_set_id = 0;
+            $executor_machine_id = 0;
+        }
 
         $result = $db->get_one("SELECT max(sort_order) from runs where section_id = $1;", [$section_id]);
         $max_sort_order = $result['max'] + 1;
 
         $new_id = $db->insert("INSERT into runs 
-            (name, comment, section_id, tags, test_filter, mode, scout_parser_id, scout_base_url, scout_set_filter, executor_set_id, manual_parser_id, sort_order)
+            (name, comment, section_id, tags, test_filter, mode, scout_parser_id, scout_base_url, scout_set_filter, executor_set_id, executor_machine_id, manual_parser_id, sort_order)
             values 
-            ($1, $2, $section_id, $3, $4, $mode, $scout_parser_id, '$scout_base_url', $5, $executor_set_id, $manual_parser_id, $max_sort_order)",
+            ($1, $2, $section_id, $3, $4, $mode, $scout_parser_id, '$scout_base_url', $5, $executor_set_id, $executor_machine_id, $manual_parser_id, $max_sort_order)",
             [$name, $comment, $tags, $test_filter, $scout_set_filter]);
 
         if ($new_id > 0) {

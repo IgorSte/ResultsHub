@@ -15,7 +15,7 @@ function save_new_order(type, ids_list)
         if (data.success) {
             showSuccess('The new order saved')
         } else {
-            showError('Load error ' + data.error);
+            showError(data.error);
         }
     })
     .catch(error => {
@@ -30,21 +30,23 @@ function save_new_order(type, ids_list)
 
 // moving sections
 const tablesContainer = document.getElementById('tables-container');
-Sortable.create(tablesContainer, {
-    animation: 150,
-    handle: '.table-wrapper .section-grip',
-    ghostClass: 'sortable-ghost',
-    onEnd: function (evt) {
-        const parentFromItem = evt.item.parentElement;
-        var new_order_ids = [];
+if (tablesContainer !== null) {
+    Sortable.create(tablesContainer, {
+        animation: 150,
+        handle: '.table-wrapper .section-grip',
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+            const parentFromItem = evt.item.parentElement;
+            var new_order_ids = [];
 
-        for (const row of parentFromItem.children) {
-            new_order_ids.push(row.getAttribute('data-section-id'))
+            for (const row of parentFromItem.children) {
+                new_order_ids.push(row.getAttribute('data-section-id'))
+            }
+
+            save_new_order('sections', new_order_ids);
         }
-
-        save_new_order('sections', new_order_ids);
-    }
-});
+    });
+}
 
 // moving run
 document.querySelectorAll('.sortable-rows').forEach(tbody => {

@@ -17,7 +17,7 @@ function init_buttons()
                     if (data.success) {
                         document.getElementById('run-details-content').innerHTML = data.data;
                     } else {
-                        alert('Load error ' + data.error);
+                        alert(data.error);
                     }
                 })
                 .catch(error => {
@@ -49,7 +49,7 @@ function init_buttons()
                         const chartData = data.data;
                         render_chart(chartData);
                     } else {
-                        showError('Load error ' + data.error);
+                        showError(data.error);
                     }
                 })
                 .catch(error => {
@@ -93,7 +93,7 @@ function init_buttons()
                         document.getElementById('run_start_button').style.display = 'block';
                         document.getElementById('run-start-content').innerHTML = data.data;
                     } else {
-                        showError('Load error ' + data.error);
+                        showError(data.error);
 
                         document.getElementById('run_start_button').style.display = 'none';
                     }
@@ -260,8 +260,8 @@ function init_buttons()
             const executor_set_id = this.getAttribute('data-executor-set-id');
             const manual_parser_id = this.getAttribute('data-manual-parser-id');
 
-            if (id == -1) title = 'Creating run';
-            else title = 'Editing run: ' + name;
+            if (id == -1) title = 'Creating Run';
+            else title = 'Editing Run: ' + name;
             
             document.getElementById('run-edit-title').textContent = title;
             document.getElementById('run-edit-id').value = id;
@@ -295,6 +295,7 @@ function init_buttons()
             document.getElementById('run-edit-scout-base-url').value = scout_base_url;
             document.getElementById('run-edit-scout-set-filter').value = scout_set_filter;
             document.getElementById('run-edit-executor-set').value = executor_set_id;
+            document.getElementById('run-edit-executor-machine').value = executor_machine_id;
             document.getElementById('run-edit-manual-parser').value = manual_parser_id;
         });
     });
@@ -414,14 +415,45 @@ function board_edit_save(do_delete = false)
 
                 if (!do_delete) {
                     if (id >= 0) {
-                        document.getElementById('board_container').innerHTML = data.data;
+                        // document.getElementById('board_container').innerHTML = data.data;
+                        setTimeout('window.location.reload()', 1000);
                     }
                     else {
-                        setTimeout('window.location.reload()', 1000);
+                        document.location.href = '?board_id=' + data.new_id;
                     }
                 }
                 else {
                     document.location.href = '/';
+                }
+            } else {
+                showError(data.error);
+            }
+
+            const boardEditModal = bootstrap.Modal.getInstance(document.getElementById('boardEditModal'));
+            if (boardEditModal) {
+                if (document.activeElement && document.getElementById('boardEditModal').contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+                boardEditModal.hide();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Connection error');
+        })
+}
+
+
+function board_get_data_update(id)
+{   
+    fetch(`api/board_update/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.data) {
+                    showInfo('Data updated')
+                    document.getElementById('board_container').innerHTML = data.data;
+                    init_buttons();
                 }
             } else {
                 showError(data.error);
@@ -482,8 +514,8 @@ function section_edit_save(do_delete = false)
                     }
                     else {
                         document.getElementById('board_container').insertAdjacentHTML('beforeend', data.data);
-                        init_buttons();
                     }
+                    init_buttons();
                 }
                 else {
                     document.getElementById('section_div_' + id).style.display = 'none';
@@ -491,6 +523,9 @@ function section_edit_save(do_delete = false)
 
                 const sectionEditModal = bootstrap.Modal.getInstance(document.getElementById('sectionEditModal'));
                 if (sectionEditModal) {
+                    if (document.activeElement && document.getElementById('sectionEditModal').contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
                     sectionEditModal.hide();
                 }
             } else {
@@ -567,6 +602,9 @@ function set_edit_save(do_delete = false)
 
                 const setEditModal = bootstrap.Modal.getInstance(document.getElementById('setEditModal'));
                 if (setEditModal) {
+                    if (document.activeElement && document.getElementById('setEditModal').contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
                     setEditModal.hide();
                 }
             } else {
@@ -644,6 +682,9 @@ function machine_edit_save(do_delete = false)
 
                 const setEditModal = bootstrap.Modal.getInstance(document.getElementById('machineEditModal'));
                 if (setEditModal) {
+                    if (document.activeElement && document.getElementById('machineEditModal').contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
                     setEditModal.hide();
                 }
             } else {
@@ -670,6 +711,7 @@ function run_edit_save(do_delete = false)
     const scout_base_url = document.getElementById('run-edit-scout-base-url').value;
     const scout_set_filter = document.getElementById('run-edit-scout-set-filter').value;
     const executor_set_id = document.getElementById('run-edit-executor-set').value;
+    const executor_machine_id = document.getElementById('run-edit-executor-machine').value;
     const manual_parser_id = document.getElementById('run-edit-manual-parser').value;
 
     var mode = 0;
@@ -715,6 +757,7 @@ function run_edit_save(do_delete = false)
                 scout_base_url: scout_base_url,
                 scout_set_filter: scout_set_filter,
                 executor_set_id: executor_set_id,
+                executor_machine_id: executor_machine_id,
                 manual_parser_id: manual_parser_id
             })
         })
@@ -737,6 +780,9 @@ function run_edit_save(do_delete = false)
 
                 const runEditModal = bootstrap.Modal.getInstance(document.getElementById('runEditModal'));
                 if (runEditModal) {
+                    if (document.activeElement && document.getElementById('runEditModal').contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
                     runEditModal.hide();
                 }
             } else {
@@ -791,8 +837,72 @@ function run_start()
 
                 const runStartModal = bootstrap.Modal.getInstance(document.getElementById('runStartModal'));
                 if (runStartModal) {
+                    if (document.activeElement && document.getElementById('runStartModal').contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
                     runStartModal.hide();
                 }
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Connection error');
+        })
+}
+
+
+function run_stop(run_id)
+{
+    if (confirm('Are you sure you want to stop the run?')) {
+        var method = 'POST';
+        
+        fetch(`api/run_stop/${run_id}`,
+            {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showInfo('Stopping shedulled...')
+                    document.getElementById('run_progress_tr_' + run_id)?.remove();
+                    document.getElementById('run_tr_' + run_id).outerHTML = data.data;
+                    init_buttons();
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Connection error');
+            })
+    }
+}
+
+
+function run_refresh(run_id)
+{
+    var method = 'POST';
+    
+    fetch(`api/run_refresh/${run_id}`,
+        {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showInfo('Results refresh shedulled...')
             } else {
                 showError(data.error);
             }

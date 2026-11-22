@@ -6,4 +6,6 @@
     $conf_db_password = "dbpwd";
     $conf_db_name_boards = "boards";
     $conf_db_name_results = "results";
+
+    $conf_board_update_interval = 60; # in secs
 ?>

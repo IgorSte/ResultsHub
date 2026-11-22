@@ -26,9 +26,12 @@ results_dir = '../results/'
 instance_log = 'log.txt'
 
 
-def is_process_running(pid: int) -> bool:
+def is_process_running(process_id: int) -> bool:
+    if not process_id:
+        return False
+    
     try:
-        os.kill(pid, 0)      # signal 0 = "does this PID exist?"
+        os.kill(process_id, 0)      # signal 0 = "does this PID exist?"
         return True
     except ProcessLookupError:
         return False         # no such process
@@ -58,10 +61,10 @@ with open(args.credentials, "r", encoding="utf-8") as creds_f:
 executors = db.get_all('''
     SELECT e.*, p.class_name, p.credentials_name, s.name as set_name
     from executors as e, parsers as p, sets as s
-    where e.parser_id = p.id and e.set_id = s.id order by state desc''', ())
+    where e.parser_id = p.id and e.set_id = s.id and e.state < 99 order by state desc''', ())
 
 for current_executor in executors:
-    # "state" int default null, -- 1 - queued, 2 - starting, 3 - running, 4 - processing, 5 - done
+    # "state" int default null, -- 1 - queued, 10 - starting, 20 - running, 30 - processing, 90 - stopping, 99 - stopped, 100 - done
 
     # getting the current executor data again to minimise race condition propability
     executor = db.get_one(f'''
@@ -75,18 +78,18 @@ for current_executor in executors:
         # checking whether the machine is free
         concurrent_executors = db.get_all(f'''
             SELECT * from executors
-            where state > 1 and state < 5 and machine_id = {executor['machine_id']} and id != {executor['id']}
+            where state > 1 and state < 99 and machine_id = {executor['machine_id']} and id != {executor['id']}
         ''', ())
 
         if len(concurrent_executors) == 0:
             # starting run
-            db.update(f'UPDATE executors SET "state" = 2 WHERE "id" = {executor["id"]}', ())
+            db.update(f'UPDATE executors SET "state" = 10 WHERE "id" = {executor["id"]}', ())
             db.update(f'UPDATE machines set executor_id = {executor["id"]} where id = {executor['machine_id']}', ())
 
             executor_log.info(f"Machine {executor['machine_id']} is free - starting run")
 
             working_dir = f"{executor_dir}{executor['id']}"
-            shutil.rmtree(working_dir)
+            shutil.rmtree(working_dir, ignore_errors=True)
             os.mkdir(working_dir)
 
 
@@ -143,7 +146,7 @@ for current_executor in executors:
 
                 db.update(f'''
                     UPDATE executors SET 
-                    "state" = 3, 
+                    "state" = 20, 
                     pid = {pid},
                     working_dir = '{working_dir}',
                     log_file_path = '{working_dir}/{instance_log}'
@@ -154,9 +157,9 @@ for current_executor in executors:
             executor_log.info("No free machine found")
 
 
-    if executor['state'] == 3:
+    if executor['state'] == 20:
         if not is_process_running(executor['pid']):
-            db.update(f'UPDATE executors SET "state" = 4 WHERE "id" = {executor["id"]}', ())
+            db.update(f'UPDATE executors SET "state" = 30 WHERE "id" = {executor["id"]}', ())
             executor_log.info(f"Execition for run ID {executor['run_id']} is done - processing")
 
             parsers_class = get_parser_class(executor["class_name"])
@@ -165,9 +168,11 @@ for current_executor in executors:
                 set_name=executor['set_name'],
             )
             results_data = parser_instance.results()
-            executor_log.info('Results received - uploading to the DB')
 
-            if len(results_data["tests"]) > 0:
+            result_id = 0
+            if results_data and len(results_data["tests"]) > 0:
+                executor_log.info('Results received - uploading to the DB')
+
                 result_id = db_results.insert_results(results_data)
 
                 for test in results_data["tests"]:
@@ -179,6 +184,7 @@ for current_executor in executors:
                 execution_log = None
                 with open(f'{executor['log_file_path']}', 'r', encoding='utf-8') as f:
                     execution_log = f.read()
+
                 if execution_log:
                     db_results.insert(f'''UPDATE "results" set "execution_log" = %s where "id" = {result_id}''', (execution_log,))
 
@@ -187,16 +193,48 @@ for current_executor in executors:
                     f'{executor['working_dir']}/allure-report/',
                     f'{results_dir}{result_id}/',
                     dirs_exist_ok=True)
+            else:
+                executor_log.info(f"Not results obtained for run ID {executor['run_id']}")
+
+            execution_log = None
+            # in case no result obtained - saving the log for the future debugging
+            if not result_id:
+                with open(f'{executor['log_file_path']}', 'r', encoding='utf-8') as f:
+                    execution_log = f.read()
 
             db.update(f'''UPDATE executors SET 
-                "state" = 5,
-                "finish_time" = '{datetime.now()}'::timestamptz
-                WHERE "id" = {executor["id"]}''', ())
+                "state" = 100,
+                "finish_time" = now(),
+                "result_id" = {result_id},
+                "execution_log" = %s
+                WHERE "id" = {executor["id"]}''', (execution_log,))
 
-            db.update(f'UPDATE runs SET "executor_id" = null WHERE "id" = {executor["run_id"]}', ())
+            db.update(f'UPDATE runs SET "executor_id" = null, update_time = now() WHERE "id" = {executor["run_id"]}', ())
             db.update(f'UPDATE machines SET "executor_id" = null WHERE "id" = {executor["machine_id"]}', ())
             executor_log.info(f"Results for run ID {executor['run_id']} processed")
 
             shutil.rmtree(executor['working_dir'])
         else:
             executor_log.debug(f"Execition for run ID {executor['run_id']} is still in progress")
+
+    if executor['state'] == 90:
+        executor_log.debug(f"Stopping run ID {executor['run_id']}")
+        if is_process_running(executor['pid']):
+            os.kill(executor['pid'], 9)
+
+        execution_log = None
+        if executor['log_file_path'] and os.path.exists(executor['log_file_path']):
+            with open(f'{executor['log_file_path']}', 'r', encoding='utf-8') as f:
+                execution_log = f.read()
+        
+        db.update(f'''UPDATE executors SET 
+            "state" = 99,
+            "finish_time" = now(),
+            "execution_log" = %s
+            WHERE "id" = {executor["id"]}''', (execution_log,))
+
+        db.update(f'UPDATE runs SET "executor_id" = null, update_time = now() WHERE "id" = {executor["run_id"]}', ())
+        db.update(f'UPDATE machines SET "executor_id" = null WHERE "id" = {executor["machine_id"]}', ())
+        executor_log.info(f"Run ID {executor['run_id']} stopped")
+
+        shutil.rmtree(executor['working_dir'], ignore_errors=True)

@@ -144,7 +144,7 @@ class AllureTestOps:
                             "in_progress_url": in_progress_url,
                         }
                         results.append(data)
-                        scout_log.debug(f'Job if running for the result {result['id']}')
+                        scout_log.debug(f'Job is running for the URL: {result['full_url']}')
                         continue
                     if not is_finished:
                         scout_log.debug(f'Job if not finished for the result {result['id']} - skipping')
